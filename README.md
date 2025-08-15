@@ -1,38 +1,48 @@
+Here’s a GitHub-friendly README.md in English — clean, minimal, and plug-and-play.
+
+⸻
+
 AIx — Anchor Investor Index (OpenVC-only)
 
-But du projet
-AIx est un petit outil Python qui classe les investisseurs capables d’ancrer (lead/anchor) un tour pre-seed/seed pour un montant cible donné.
-Il s’appuie uniquement sur le CSV public OpenVC (tickets min/max, stage, HQ/pays d’investissement), calcule des sous-scores interprétables (AC/FS/SF/FC), applique un malus de confiance si la fiche est incomplète, et produit un score AIx /100 ainsi qu’un Tier (A/B/C/U) par scénario de montant.
-
-	•	📄 Article associé (Medium) : The Anchor Bottleneck — <INSÈRE ICI LE LIEN MEDIUM>
-	•	🗂️ Fichiers principaux à utiliser :
-	•	aix_builder_sw.py → exécutions Suisse (CH)
-	•	aix_builder_fr.py → exécutions France (FR)
-	•	🧾 Dataset attendu : OpenVC.csv (export 2025-07) — MD5 8983450fb099e20bc16c91d4a0e8af8f
+AIx is a small Python tool that ranks venture investors by their ability to anchor a pre-seed/seed round for a given target amount.
+It uses only the public OpenVC CSV (min/max check, stage, HQ / countries) to compute interpretable sub-scores (AC / FS / SF / FC), applies a confidence penalty when profiles are incomplete, then outputs an AIx score (/100) and a Tier (A / B / C / U) per scenario to help you sequence outreach.
+	•	📄 Article: The Anchor Bottleneck — add your Medium link here
+	•	🗂️ Main scripts:
+	•	aix_builder_sw.py → Switzerland (CH) runs
+	•	aix_builder_fr.py → France (FR) runs
+	•	🧾 Dataset expected: OpenVC.csv (export 2025-07) — MD5 8983450fb099e20bc16c91d4a0e8af8f
 
 ⸻
 
-1) Prérequis
+1) Prerequisites
 	•	Python 3.9+ (3.10/3.11 OK)
-	•	pip (ou pipx/poetry si tu préfères)
-	•	Système : macOS, Linux, ou Windows (PowerShell)
+	•	pip (or pipx/poetry if you prefer)
 
-Dépendances Python : pandas, numpy, matplotlib (et argparse natif).
-Si le repo contient requirements.txt, installe-le directement (voir Quick start). Sinon :
+Python deps: pandas, numpy, matplotlib (and argparse from stdlib).
 
-pip install pandas numpy matplotlib
+If you use a requirements.txt, keep it minimal, e.g.:
+
+pandas>=2.0
+numpy>=1.24
+matplotlib>=3.7
+
+Install:
+
+pip install -r requirements.txt
+# or:
+# pip install pandas numpy matplotlib
 
 
 ⸻
 
-2) Installation rapide (Quick start)
+2) Quick start
 
-a) Cloner & se placer dans le dossier
+a) Clone & enter the repo
 
-git clone <TON_REPO_GITHUB>.git
-cd <TON_REPO_GITHUB>
+git clone <YOUR_REPO_URL>.git
+cd <YOUR_REPO_NAME>
 
-b) (Optionnel) Créer un venv propre
+b) (Optional) Create a clean virtual env
 
 python -m venv .venv
 # macOS/Linux
@@ -40,18 +50,16 @@ source .venv/bin/activate
 # Windows PowerShell
 .venv\Scripts\Activate.ps1
 
-c) Installer les dépendances
+c) Install dependencies
 
-# si requirements.txt est présent
 pip install -r requirements.txt
-# sinon :
-# pip install pandas numpy matplotlib
+# or: pip install pandas numpy matplotlib
 
-d) Placer le dataset OpenVC
+d) Add the OpenVC dataset
 
-Copie OpenVC.csv (export 2025-07) à la racine du repo.
+Place OpenVC.csv (export 2025-07) at the repo root.
 
-(Optionnel) Vérifier l’intégrité :
+Verify the file integrity (optional):
 
 # macOS
 md5 OpenVC.csv
@@ -59,69 +67,70 @@ md5 OpenVC.csv
 md5sum OpenVC.csv
 # Windows PowerShell
 Get-FileHash OpenVC.csv -Algorithm MD5
-# → doit renvoyer : 8983450fb099e20bc16c91d4a0e8af8f
+# → should be: 8983450fb099e20bc16c91d4a0e8af8f
 
 
 ⸻
 
-3) Lancer le scoring
+3) Run the builders
 
-🇨🇭 Suisse (3 scénarios : 300k / 800k / 1.5M CHF)
+🇨🇭 Switzerland (3 scenarios: 300k / 800k / 1.5M CHF)
 
 python aix_builder_sw.py --openvc OpenVC.csv --out ./out_ch --scenarios 300k,800k,1500k
 
-🇫🇷 France (3 scénarios : ~250k / ~700k / ~1.2M €)
+🇫🇷 France (3 scenarios: ~250k / ~700k / ~1.2M €)
 
 python aix_builder_fr.py --openvc OpenVC.csv --out ./out_fr --scenarios 250k,700k,1200k
 
-Paramètres communs
-	•	--openvc : chemin vers le fichier OpenVC.csv
-	•	--out : dossier de sortie (sera créé si absent)
-	•	--scenarios : liste séparée par des virgules des montants cibles (suffixes autorisés : k / M, ex. 300k,800k,1.5M)
+Common flags
+	•	--openvc : path to OpenVC.csv
+	•	--out : output folder (created if missing)
+	•	--scenarios : comma-separated target amounts (supports k / M, e.g. 300k,800k,1.5M)
 
 ⸻
 
-4) Résultats générés
+4) Outputs
 
-Dans --out, tu obtiendras (noms indicatifs) :
+Inside your --out folder you’ll typically get:
 	•	aix_switzerland_v4.csv / aix_france_v4.csv
-→ détail par fonds : sous-scores AC/FS/SF/FC, malus, AIx par scénario (aix_300k, aix_800k, …) et tiers (tier_300k, tier_800k, …).
+Per-fund details: sub-scores AC / FS / SF / FC, malus (confidence penalty), AIx per scenario (aix_300k, aix_800k, …) and tiers (tier_300k, tier_800k, …).
 	•	aix_tiers_sw_v4.csv / aix_tiers_fr_v4.csv
-→ distributions A/B/C/U par scénario (résumé).
-	•	(éventuellement) un sous-dossier figs/ si tu génères des graphes à partir des CSV.
+Compact A/B/C/U distributions by scenario.
+	•	(Optional) a figs/ subfolder if you generate charts from the CSVs.
 
-Lecture rapide des Tiers
-	•	Tier A (≥75) : très bon candidat anchor au palier donné
-	•	Tier B (55–74) : fit partiel / second rideau
-	•	Tier C (<55)  : misaligné (ticket/stage/pays)
-	•	Tier U        : non scoré (min & max manquants)
-
-⸻
-
-5) Conseils d’usage
-	•	Choisis ton scénario (ex. seed ~800k) et utilise la liste Tier A en vague 1 d’intros, Tier B en vague 2, Tier C en backup.
-	•	Transparence : les sous-scores par fonds (AC/FS/SF/FC) expliquent pourquoi un fonds est A/B/C — utile en entretien.
-	•	Toggle local : si tu veux privilégier un HQ strict local, tu peux réajuster FC (15 si HQ local, sinon 0) et recalculer rapidement les Tiers à partir du CSV.
+Quick read of tiers
+	•	Tier A (≥ 75): strong anchor candidate at that scenario
+	•	Tier B (55–74): partial fit / second wave
+	•	Tier C (< 55): misaligned (ticket / stage / country)
+	•	Tier U: unscored (missing min & max)
 
 ⸻
 
-6) Limitations (à connaître)
-	•	OpenVC-only : données déclaratives (parfois incomplètes). Le malus et le Tier U rendent cette qualité visible.
-	•	Pas une prédiction : AIx priorise l’ordre de tir (qui appeler d’abord), mais ne garantit pas un term sheet.
-	•	Seuils fixes : les cut-offs (A/B/C) sont fixes pour comparer pays/scénarios dans le temps.
+5) How to use in practice
+	1.	Pick the scenario nearest to your raise (e.g. ~800k seed).
+	2.	Start outreach with Tier A (wave 1), then Tier B (wave 2), keep Tier C as optional tail.
+	3.	Use per-fund sub-scores (AC/FS/SF/FC) to understand why a fund lands in A/B/C and adjust targeting (e.g., switch scenario if tickets are too small/large).
+	4.	If you want to favor local HQ only, re-weight FC (15 if HQ local, else 0) and re-tier quickly from the CSV.
 
 ⸻
 
-7) Référence article & licence
-	•	📄 Medium : The Anchor Bottleneck — <INSÈRE ICI LE LIEN MEDIUM>
-	•	📜 Licence : MIT
+6) Notes & limitations
+	•	OpenVC-only → self-reported data (sometimes incomplete). This is surfaced via the confidence penalty and Tier U.
+	•	Not a predictor → AIx prioritizes who to call first; it doesn’t guarantee a term sheet.
+	•	Fixed cut-offs (A/B/C) for comparability across countries/scenarios over time.
 
 ⸻
 
-Besoin d’un exemple minimal ?
+7) Links & license
+	•	📄 Medium article: The Anchor Bottleneck — add link
+	•	📜 License: MIT (add a LICENSE file)
 
-Une fois out_ch/aix_switzerland_v4.csv généré, tu peux facilement tracer la répartition des Tiers à 800k :
+⸻
+
+Minimal example (sanity check)
+
+After a CH run, print the tier distribution at ~800k:
 
 import pandas as pd
-ch = pd.read_csv("out_ch/aix_switzerland_v4.csv")
-print(ch['tier_800k'].value_counts())
+df = pd.read_csv("out_ch/aix_switzerland_v4.csv")
+print(df["tier_800k"].value_counts())
