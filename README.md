@@ -33,3 +33,10 @@ python aix_builder_sw.py --openvc OpenVC.csv --out ./out_ch --scenarios 300k,800
 
 # 4) Run France (FR)
 python aix_builder_fr.py --openvc OpenVC.csv --out ./out_fr --scenarios 250k,700k,1200k
+```
+---
+
+## License
+
+This repo is distributed under the MIT License (see LICENSE).
+The original OpenVC dataset is MIT‑licensed as well.
