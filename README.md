@@ -1,3 +1,4 @@
+```bash
 # AIx — Anchor Investor Index (OpenVC-only)
 
 AIx measures a fund’s ability to anchor a pre-seed/seed round for a given target amount.
@@ -49,3 +50,4 @@ python aix_builder_fr.py --openvc OpenVC.csv --out ./out_fr --scenarios 250k,700
 
 This repo is distributed under the MIT License (see LICENSE).
 The original OpenVC dataset is MIT‑licensed as well.
+```
