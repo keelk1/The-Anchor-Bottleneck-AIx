@@ -36,16 +36,23 @@ It is a transparent, scenario-sensitive scoring framework built OpenVC-only (pub
 python3 -m venv venv && source venv/bin/activate
 pip install pandas numpy matplotlib
 
-# 2) Run Switzerland (CH)
+# 2) Run Switzerland (CH) 🇨🇭
 python aix_builder_sw.py --openvc OpenVC.csv --out ./out_ch --scenarios 300k,800k,1500k
 
-# 3) Run France (FR)
+# 3) Run France (FR) 🇫🇷
 python aix_builder_fr.py --openvc OpenVC.csv --out ./out_fr --scenarios 250k,700k,1200k
 ```
+---
+
+## Notes
+
+•	OpenVC-only → declarative data; quality is surfaced via the penalty and Tier U.
+•	AIx prioritizes who to call first; it’s not a term-sheet predictor.
+•	Fixed tier cut-offs (A≥75, B 55–74, C<55) for comparability across countries/scenarios.
+
 ---
 
 ## License
 
 This repo is distributed under the MIT License (see LICENSE).
 The original OpenVC dataset is MIT‑licensed as well.
-
