@@ -47,7 +47,9 @@ python aix_builder_fr.py --openvc OpenVC.csv --out ./out_fr --scenarios 250k,700
 ## Notes
 
 •	OpenVC-only → declarative data; quality is surfaced via the penalty and Tier U.
+
 •	AIx prioritizes who to call first; it’s not a term-sheet predictor.
+
 •	Fixed tier cut-offs (A≥75, B 55–74, C<55) for comparability across countries/scenarios.
 
 ---
