@@ -1,11 +1,11 @@
-
 #!/usr/bin/env python3
 import csv, pandas as pd, re, argparse
 from pathlib import Path
 
-DEFAULT_INPUT  = "OpenVC.csv"
-DEFAULT_FULL   = "aix_switzerland_v4.csv"
-DEFAULT_AGG    = "aix_tiers_sw_v4.csv"
+DEFAULT_INPUT   = "OpenVC.csv"
+DEFAULT_FULL    = "aix_switzerland_v4.csv"
+DEFAULT_AGG     = "aix_tiers_sw_v4.csv"            # <- Top-20 Tier A (simple table)
+DEFAULT_SUMMARY = "aix_tiers_sw_summary_v4.csv"    # <- counts/% per scenario
 
 # ---------- helpers ----------
 def norm(col):
@@ -31,15 +31,32 @@ def parse_money(txt):
     if unit == "k": val *= 1_000
     return int(round(val))
 
+def parse_scenarios_arg(txt):
+    out=[]
+    for tok in str(txt).split(","):
+        t = tok.strip().lower()
+        if not t: continue
+        mult = 1
+        if t.endswith("m"): mult, t = 1_000_000, t[:-1]
+        elif t.endswith("k"): mult, t = 1_000, t[:-1]
+        t = t.replace(" ", "").replace(",", ".")
+        out.append(int(round(float(t) * mult)))
+    return tuple(out) if out else (300_000, 800_000, 1_500_000)
+
+def label_for(target):  # 300000 -> "300k"
+    return f"{int(round(target/1000))}k"
+
 def contains_ch(text):
     if not text: return False
     t = str(text).lower()
-    return ("switzerland" in t) or ("suisse" in t) or ("schweiz" in t) or ("confederation suisse" in t) or ("lausanne" in t) or ("geneva" in t) or ("zurich" in t) or ("zug" in t) or ("vaud" in t) or ("bern" in t) or ("basel" in t) or ("ch" in t and "swit" in t)
+    return ("switzerland" in t) or ("suisse" in t) or ("schweiz" in t) or ("confederation suisse" in t) \
+        or ("lausanne" in t) or ("geneva" in t) or ("genève" in t) or ("zurich" in t) or ("zug" in t) \
+        or ("vaud" in t) or ("bern" in t) or ("berne" in t) or ("basel" in t) or ("ch" in t and "swit" in t)
 
-# ---------- V3.1 logic carried + Tier U ----------
+# ---------- scoring ----------
 def score_stage(stage):  # SF (0-20)
     s = (stage or "").lower()
-    if any(k in s for k in ["prototype","early revenue","pre-seed","pre seed","preseed","idea","patent"]):
+    if any(k in s for k in ["prototype","early revenue","pre-seed","pre seed","preseed","idea","idéation","patent"]):
         return 20
     if "seed" in s: 
         return 8
@@ -84,12 +101,12 @@ def malus_from_confidence(flag):
     return {"high": 0, "mid": -5, "low": -10}.get(flag, -5)
 
 def assign_tier(aix):
+    if aix is None: return "U"
     if aix >= 75: return "A"
     if aix >= 55: return "B"
     return "C"
 
 def is_unscored(min_c, max_c):
-    # "poubelle" / data-gap: BOTH min and max are missing or zero
     return (min_c is None or min_c <= 0) and (max_c is None or max_c <= 0)
 
 # ---------- core ----------
@@ -113,14 +130,12 @@ def build_scores(path, targets=(300_000, 800_000, 1_500_000), country="CH", type
             min_c = parse_money(row.get(col.get("first_cheque_minimum",""), ""))
             max_c = parse_money(row.get(col.get("first_cheque_maximum",""), ""))
 
-            sf = score_stage(stage_raw)             # 0-20
-            fc = score_focus(countries, hq)         # 0-15
-
+            sf = score_stage(stage_raw)
+            fc = score_focus(countries, hq)
             conf = confidence_flag(min_c>0, max_c>0, bool(stage_raw), bool(countries))
             malus = malus_from_confidence(conf)
 
             if is_unscored(min_c, max_c):
-                # Put into Tier U (Unscored / Data gap). No AIx computed.
                 rows.append({
                     "name": name, "website": website, "type": inv_type,
                     "hq_raw": hq, "countries_raw": countries, "stage_raw": stage_raw,
@@ -138,19 +153,15 @@ def build_scores(path, targets=(300_000, 800_000, 1_500_000), country="CH", type
                 })
                 continue
 
-            ac_scores, fs_scores = {}, {}
-            aix_fin, tiers = {}, {}
-
+            ac_scores, fs_scores, aix_fin, tiers = {}, {}, {}, {}
             for t in targets:
-                ac = score_anchor_capacity(max_c, t, sf)      # 0-30
-                fs = score_flex(min_c, max_c, t)              # 0-25
-                raw90 = ac + fs + sf + fc                     # max 90
-                raw100 = int(round(raw90 * (100.0/90.0)))     # rescale
+                ac = score_anchor_capacity(max_c, t, sf)
+                fs = score_flex(min_c, max_c, t)
+                raw90 = ac + fs + sf + fc
+                raw100 = int(round(raw90 * (100.0/90.0)))
                 fin = max(0, min(100, raw100 + malus))
-                ac_scores[t] = ac
-                fs_scores[t] = fs
-                aix_fin[t] = fin
-                tiers[t] = assign_tier(fin)
+                ac_scores[t], fs_scores[t] = ac, fs
+                aix_fin[t], tiers[t] = fin, assign_tier(fin)
 
             default_t = 800_000 if 800_000 in targets else list(targets)[0]
             rows.append({
@@ -169,29 +180,80 @@ def build_scores(path, targets=(300_000, 800_000, 1_500_000), country="CH", type
             })
     return pd.DataFrame(rows)
 
-def aggregate_tiers(df, col_aix="aix", col_tier="tier"):
-    g = df.groupby(col_tier).agg(
-        count=("name","count"),
-        median_min=("cheque_min","median"),
-        median_aix=(col_aix,"median")
-    ).reset_index()
-    order={"A":0,"B":1,"C":2,"U":3}
-    g["order"]=g["tier"].map(order).fillna(9)
-    return g.sort_values("order").drop(columns=["order"])
+# ---------- Top-20 (simple) & summary ----------
+def topA_simple(df, scenarios, topn=20):
+    """Return a clean Top-N for each scenario with only ID info, rank_20 and AIx."""
+    blocks=[]
+    for t in scenarios:
+        lab = label_for(t)                   # "300k" / "800k" / "1500k"
+        tier_col = f"tier_{lab}"
+        aix_col  = f"aix_{lab}"
 
+        subset = df[df[tier_col] == "A"].copy()
+        if subset.empty:
+            continue
+
+        # Tri principal: AIx desc, puis max cheque pour départager (plus robuste que multiplier les colonnes)
+        subset = subset.sort_values(
+            by=[aix_col, "cheque_max", "sf", "fc"],
+            ascending=[False, False, False, False]
+        ).head(topn)
+
+        # Colonnes simples et lisibles
+        out = subset[[
+            "name","website","type","hq_raw","countries_raw","stage_raw",
+            "cheque_min","cheque_max",aix_col
+        ]].rename(columns={
+            "name":"fund_name","website":"website","type":"type",
+            "hq_raw":"hq","countries_raw":"countries","stage_raw":"stage",
+            "cheque_min":"min_check","cheque_max":"max_check",
+            aix_col:"aix"
+        })
+
+        # Ajout scenario + rank_20 (1..N)
+        out.insert(0, "scenario", lab)
+        out.insert(1, "rank_20", range(1, len(out)+1))
+        blocks.append(out)
+
+    return pd.concat(blocks, ignore_index=True) if blocks else pd.DataFrame(
+        columns=["scenario","rank_20","fund_name","website","type","hq","countries","stage","min_check","max_check","aix"]
+    )
+
+def tiers_summary_by_scenario(df, scenarios):
+    rows=[]; order=["A","B","C","U"]
+    for t in scenarios:
+        lab = label_for(t); col = f"tier_{lab}"
+        vc = df[col].value_counts(); total = int(vc.sum())
+        for tier in order:
+            cnt = int(vc.get(tier, 0))
+            pct = round((cnt/total*100.0), 1) if total>0 else 0.0
+            rows.append({"scenario":lab, "tier":tier, "count":cnt, "percent":pct})
+    return pd.DataFrame(rows)
+
+# ---------- main ----------
 def main(argv=None):
     p = argparse.ArgumentParser()
     p.add_argument("--input", default=DEFAULT_INPUT)
     p.add_argument("--country", default="CH")
     p.add_argument("--full-out", default=DEFAULT_FULL)
-    p.add_argument("--agg-out", default=DEFAULT_AGG)
+    p.add_argument("--agg-out", default=DEFAULT_AGG, help="Top-20 Tier A per scenario (simple table)")
+    p.add_argument("--summary-out", default=DEFAULT_SUMMARY, help="Tier distribution summary CSV")
+    p.add_argument("--scenarios", default="300k,800k,1500k")
+    p.add_argument("--topn", type=int, default=20)
     args = p.parse_args(argv)
 
-    df = build_scores(args.input, country=args.country)
+    targets = parse_scenarios_arg(args.scenarios)
+
+    df = build_scores(args.input, targets=targets, country=args.country)
     df.to_csv(args.full_out, index=False)
-    agg = aggregate_tiers(df, col_aix="aix", col_tier="tier")
-    agg.to_csv(args.agg_out, index=False)
-    print(agg)
+
+    topA = topA_simple(df, scenarios=targets, topn=args.topn)
+    topA.to_csv(args.agg_out, index=False)
+    print(f"[Top-20] wrote {len(topA)} rows -> {args.agg_out}")
+
+    summary = tiers_summary_by_scenario(df, scenarios=targets)
+    summary.to_csv(args.summary_out, index=False)
+    print(f"[Summary] wrote {len(summary)} rows -> {args.summary_out}")
 
 if __name__ == "__main__":
     main()
