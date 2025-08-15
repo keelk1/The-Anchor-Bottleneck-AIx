@@ -3,7 +3,7 @@
 AIx measures a fund’s ability to anchor a pre-seed/seed round for a given target amount.
 It is a transparent, scenario-sensitive scoring framework built OpenVC-only (public CSV), designed for VCs, CVCs and founders who need a defensible, reproducible way to prioritize investor outreach.
 
-**Article:** _The Anchor Bottleneck_ — <ADD (https://medium.com/@edgartissot01/the-anchor-bottleneck-f26e26d0b0ab)>  
+**Article:** _The Anchor Bottleneck_ — [[<ADD (https://medium.com/@edgartissot01/the-anchor-bottleneck-f26e26d0b0ab)>  ](https://medium.com/@edgartissot01/the-anchor-bottleneck-f26e26d0b0ab)](https://medium.com/@edgartissot01/the-anchor-bottleneck-f26e26d0b0ab)
 **Run scripts:** `aix_builder_sw.py` (Switzerland) · `aix_builder_fr.py` (France)
 
 ---
