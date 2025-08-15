@@ -20,11 +20,13 @@ It is a transparent, scenario-sensitive scoring framework built OpenVC-only (pub
 ---
 
 ## Repository structure
+```bash
 •	aix_builder_sw.py —> CLI to score Switzerland (CH) for one or more target scenarios
 
 •	aix_builder_fr.py —> CLI to score France (FR) for one or more target scenarios
 
 •	OpenVC.csv —> the OpenVC export used as the only data source
+```
 
 ---
 
@@ -35,13 +37,10 @@ It is a transparent, scenario-sensitive scoring framework built OpenVC-only (pub
 python3 -m venv venv && source venv/bin/activate
 pip install pandas numpy matplotlib
 
-# 2) Put the OpenVC export at the repo root
-#    file name: OpenVC.csv  (use your latest export)
-
-# 3) Run Switzerland (CH)
+# 2) Run Switzerland (CH)
 python aix_builder_sw.py --openvc OpenVC.csv --out ./out_ch --scenarios 300k,800k,1500k
 
-# 4) Run France (FR)
+# 3) Run France (FR)
 python aix_builder_fr.py --openvc OpenVC.csv --out ./out_fr --scenarios 250k,700k,1200k
 ```
 ---
