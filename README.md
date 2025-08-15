@@ -5,7 +5,7 @@ It is a transparent, scenario-sensitive scoring framework built OpenVC-only (pub
 
 **Article:** _The Anchor Bottleneck_ — https://medium.com/@edgartissot01/the-anchor-bottleneck-f26e26d0b0ab
 
-**Run scripts:** `aix_builder_sw.py` (Switzerland) · `aix_builder_fr.py` (France)
+**Run scripts:** `aix_builder_sw.py` (Switzerland)🇨🇭 · `aix_builder_fr.py` (France)🇫🇷
 
 ---
 
