@@ -21,7 +21,9 @@ It is a transparent, scenario-sensitive scoring framework built OpenVC-only (pub
 
 ## Repository structure
 •	aix_builder_sw.py —> CLI to score Switzerland (CH) for one or more target scenarios
+
 •	aix_builder_fr.py —> CLI to score France (FR) for one or more target scenarios
+
 •	OpenVC.csv —> the OpenVC export used as the only data source
 
 ---
