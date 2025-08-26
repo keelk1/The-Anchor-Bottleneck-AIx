@@ -38,10 +38,10 @@ python3 -m venv venv && source venv/bin/activate
 pip install pandas numpy matplotlib
 
 # 2) Run Switzerland (CH) 🇨🇭
-python aix_builder_sw.py --openvc OpenVC.csv --out ./out_ch --scenarios 300k,800k,1500k
+python3 aix_builder_sw.py --openvc OpenVC.csv --out ./out_ch --scenarios 300k,800k,1500k
 
 # 3) Run France (FR) 🇫🇷
-python aix_builder_fr.py --openvc OpenVC.csv --out ./out_fr --scenarios 250k,700k,1200k
+python3 aix_builder_fr.py --openvc OpenVC.csv --out ./out_fr --scenarios 250k,700k,1200k
 ```
 ---
 
